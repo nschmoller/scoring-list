@@ -64,6 +64,74 @@ class App extends React.Component {
     })
   }
 
+  handleMinus = (event, index) => {
+    this.setState(prevState => {
+      const newListItems = prevState.listItems.slice();
+      const newItem = {
+        title: newListItems[index].title,
+        score: newListItems[index].score - 1,
+      }
+      newListItems[index] = newItem;
+      this.sortListItems(newListItems);
+
+      window.localStorage.setItem(newItem.title, JSON.stringify(newItem));
+
+      return {
+        listItems: newListItems,
+      }
+    })
+  }
+
+  handleDelete = (event, index) => {
+    this.setState(prevState => {
+      const deletedTitle = prevState.listItems[index].title;
+      const newListItems = prevState.listItems.toSpliced(index, 1);
+
+      window.localStorage.removeItem(deletedTitle);
+
+      return {
+        listItems: newListItems,
+      }
+    })
+  }
+
+  handleExport = (event) => {
+    const blob = new Blob([JSON.stringify(this.state.listItems)], { type: 'text/json' });
+    const downloadLink = document.createElement('a');
+    downloadLink.href = window.URL.createObjectURL(blob);
+    downloadLink.download = `scoringlist-export-${Date.now()}.json`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  }
+
+  handleImport = (event) => {
+    event.preventDefault();
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        const fileContents = event.target.result;
+        const listItems = JSON.parse(fileContents);
+        this.setState(() => {
+          return {
+            listItems: listItems
+          }
+        });
+        window.localStorage.clear();
+        for (const listItem of listItems) {
+          window.localStorage.setItem(listItem.title, JSON.stringify(listItem));
+        }
+      };
+
+      reader.readAsText(file);
+    }
+    fileInput.value = '';
+  }
+
   render() {
     const listTemplate =
       this.state.listItems.map((element, key) => {
@@ -71,6 +139,8 @@ class App extends React.Component {
           <div className='elementTitle'>{element.title}</div>
           <div className='score'>{element.score}</div>
           <div className='plusButton'><button onClick={(e) => this.handlePlus(e, key)}>+</button></div>
+          <div className='minusButton'><button onClick={(e) => this.handleMinus(e, key)}>-</button></div>
+          <div className='deleteButton'><button onClick={(e) => this.handleDelete(e, key)}>🗑️</button></div>
         </li>
       });
 
@@ -81,8 +151,17 @@ class App extends React.Component {
             {listTemplate}
           </ol>
           <form onSubmit={this.addElement}>
-            <input type="text" name="element" value={this.state.newItem} onChange={this.handleNewItemChange}/>
+            <div className='inputNew'>
+              <input type="text" name="element" value={this.state.newItem} onChange={this.handleNewItemChange}/>
+            </div>
           </form>
+          <div className='export'>
+            <button onClick={(e) => this.handleExport(e)}>export</button>
+            <form id="upload">
+              <input type="file" id="fileInput" name="file"/>
+              <button onClick={(e) => this.handleImport(e)}>import</button>
+            </form>
+          </div>
         </header>
       </div>
     );
