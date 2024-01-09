@@ -146,7 +146,6 @@ class App extends React.Component {
 
     return (
       <div className="App">
-        <header className="App-header">
           <ol>
             {listTemplate}
           </ol>
@@ -155,14 +154,15 @@ class App extends React.Component {
               <input type="text" name="element" value={this.state.newItem} onChange={this.handleNewItemChange}/>
             </div>
           </form>
-          <div className='export'>
-            <button onClick={(e) => this.handleExport(e)}>export</button>
-            <form id="upload">
-              <input type="file" id="fileInput" name="file"/>
-              <button onClick={(e) => this.handleImport(e)}>import</button>
-            </form>
-          </div>
-        </header>
+          <p>
+            <div className='export'>
+              <button onClick={(e) => this.handleExport(e)}>export</button>
+              <form id="upload">
+                <input type="file" id="fileInput" name="file"/>
+                <button onClick={(e) => this.handleImport(e)}>import</button>
+              </form>
+            </div>
+          </p>
       </div>
     );
   }

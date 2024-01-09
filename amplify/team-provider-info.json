@@ -10,6 +10,14 @@
       "StackName": "amplify-scoringlist-dev-05052",
       "StackId": "arn:aws:cloudformation:eu-central-1:666189415897:stack/amplify-scoringlist-dev-05052/f91c1410-7ff7-11ed-aca3-02567ebe02f8",
       "AmplifyAppId": "d22t84nlwucp6g"
+    },
+    "categories": {
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d22t84nlwucp6g",
+          "type": "manual"
+        }
+      }
     }
   }
 }
