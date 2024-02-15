@@ -34,6 +34,7 @@ class App extends React.Component {
     const newItemObject = {
       title: this.state.newItem,
       score: 0,
+      flag: false,
     }
     window.localStorage.setItem(this.state.newItem, JSON.stringify(newItemObject));
     this.setState(prevState => ({
@@ -95,6 +96,24 @@ class App extends React.Component {
     })
   }
 
+  handleFlag = (event, index) => {
+    this.setState(prevState => {
+      const newListItems = prevState.listItems.slice();
+      const newItem = {
+        title: newListItems[index].title,
+        score: newListItems[index].score,
+        flag: !newListItems[index].flag,
+      }
+      newListItems[index] = newItem;
+
+      window.localStorage.setItem(newItem.title, JSON.stringify(newItem));
+
+      return {
+        listItems: newListItems,
+      }
+    })
+  }
+
   handleExport = (event) => {
     const blob = new Blob([JSON.stringify(this.state.listItems)], { type: 'text/json' });
     const downloadLink = document.createElement('a');
@@ -135,12 +154,13 @@ class App extends React.Component {
   render() {
     const listTemplate =
       this.state.listItems.map((element, key) => {
-        return <li key={key}>
+        return <li key={key} className={element.flag ? 'flag' : ''}>
           <div className='elementTitle'>{element.title}</div>
           <div className='score'>{element.score}</div>
           <div className='plusButton'><button onClick={(e) => this.handlePlus(e, key)}>+</button></div>
           <div className='minusButton'><button onClick={(e) => this.handleMinus(e, key)}>-</button></div>
           <div className='deleteButton'><button onClick={(e) => this.handleDelete(e, key)}>🗑️</button></div>
+          <div className='flagButton'><button onClick={(e) => this.handleFlag(e, key)}>🚩</button></div>
         </li>
       });
 

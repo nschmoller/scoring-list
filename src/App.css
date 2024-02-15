@@ -45,3 +45,7 @@ li div {
 .elementTitle {
   flex-grow: 8;
 }
+
+.flag {
+  color: lightcoral;
+}
