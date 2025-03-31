@@ -7,8 +7,6 @@ class App extends React.Component {
     
     const listItems = this.getListItemsFromLocalStorage();
 
-    this.sortListItems(listItems);
-
     this.state = {
       listItems: listItems,
       newItem: "",
@@ -30,7 +28,7 @@ class App extends React.Component {
       }
     }
 
-    return listItems;
+    return this.sortListItems(listItems);
   }
 
   sortListItems(listItems) {
@@ -183,7 +181,6 @@ class App extends React.Component {
     const filteredListItems = this.getListItemsFromLocalStorage().filter((item) => {
       return item.title.toLowerCase().includes(searchBox.toLowerCase());
     });
-    this.sortListItems(filteredListItems);
     this.setState({listItems: filteredListItems});
   }
 
