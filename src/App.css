@@ -50,6 +50,14 @@ li div {
   color: lightcoral;
 }
 
+@keyframes highlight {
+  from {
+    background-color: rgba(200, 200, 200, 0.5);
+  }
+  to {
+    background-color: transparent;
+  }
+}
 .last-updated {
-  color: lightgreen;
+  animation: highlight 2s ease-in-out;
 }

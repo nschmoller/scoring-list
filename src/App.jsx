@@ -5,7 +5,7 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     
-    const listItems = this.getDataFromLocalStorage();
+    const listItems = this.getListItemsFromLocalStorage();
 
     this.sortListItems(listItems);
 
@@ -13,10 +13,11 @@ class App extends React.Component {
       listItems: listItems,
       newItem: "",
       lastUpdated: null,
+      searchBox: "",
     }
   }
 
-  getDataFromLocalStorage() {
+  getListItemsFromLocalStorage() {
     const listItems = [];
     for (const jsonModel of Object.values(window.localStorage)) {
       try {
@@ -56,22 +57,26 @@ class App extends React.Component {
   }
 
   handlePlus = (_event, index) => {
-    this.setState(prevState => {
-      const newListItems = prevState.listItems.map((item, idx) => {
-        if (idx === index) {
-          return { ...item, score: item.score + 1 };
-        } else {
-          return item;
-        }
+    this.setState({
+      lastUpdated: null,
+    }, () => {
+      this.setState(prevState => {
+        const newListItems = prevState.listItems.map((item, idx) => {
+          if (idx === index) {
+            return { ...item, score: item.score + 1 };
+          } else {
+            return item;
+          }
+        });
+        this.sortListItems(newListItems);
+
+        window.localStorage.setItem(newListItems[index].title, JSON.stringify(newListItems[index]));
+
+        return {
+          listItems: newListItems,
+          lastUpdated: prevState.listItems[index].title,
+        };
       });
-      this.sortListItems(newListItems);
-
-      window.localStorage.setItem(newListItems[index].title, JSON.stringify(newListItems[index]));
-
-      return {
-        listItems: newListItems,
-        lastUpdated: prevState.listItems[index].title,
-      };
     });
   }
 
@@ -172,19 +177,40 @@ class App extends React.Component {
     return classNames.join(' ');
   }
 
+  handleSearchBoxChange = (event) => {
+    const searchBox = event.currentTarget.value;
+    this.setState({searchBox: searchBox});
+    const filteredListItems = this.getListItemsFromLocalStorage().filter((item) => {
+      return item.title.toLowerCase().includes(searchBox.toLowerCase());
+    });
+    this.sortListItems(filteredListItems);
+    this.setState({listItems: filteredListItems});
+  }
+
+  clearSearchBox = () => {
+    this.setState({ 
+      searchBox: "", 
+      listItems: this.getListItemsFromLocalStorage(),
+    });
+  }
+
   render() {
 
     return (
       <div className="App">
+          <form className='searchBox'>
+            <input type="text" name="searchBox" placeholder='filter' value={this.state.searchBox} onChange={this.handleSearchBoxChange}/>
+            <button type="button" onClick={this.clearSearchBox}>❌</button>
+          </form>
           <ol>
             {this.listTemplate()}
           </ol>
           <form onSubmit={this.addElement}>
             <div className='inputNew'>
-              <input type="text" name="element" value={this.state.newItem} onChange={this.handleNewItemChange}/>
+              <input type="text" name="element" placeholder='add new item' value={this.state.newItem} onChange={this.handleNewItemChange}/>
             </div>
           </form>
-          <p>
+          <div>
             <div className='export'>
               <button onClick={(e) => this.handleExport(e)}>export</button>
               <form id="upload">
@@ -192,7 +218,7 @@ class App extends React.Component {
                 <button onClick={(e) => this.handleImport(e)}>import</button>
               </form>
             </div>
-          </p>
+          </div>
       </div>
     );
   }
