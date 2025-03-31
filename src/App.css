@@ -49,3 +49,7 @@ li div {
 .flag {
   color: lightcoral;
 }
+
+.last-updated {
+  color: lightgreen;
+}

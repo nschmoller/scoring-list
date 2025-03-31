@@ -1,10 +1,22 @@
-import './App.css';
 import React from 'react';
+import './App.css';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
+    
+    const listItems = this.getDataFromLocalStorage();
 
+    this.sortListItems(listItems);
+
+    this.state = {
+      listItems: listItems,
+      newItem: "",
+      lastUpdated: null,
+    }
+  }
+
+  getDataFromLocalStorage() {
     const listItems = [];
     for (const jsonModel of Object.values(window.localStorage)) {
       try {
@@ -17,12 +29,7 @@ class App extends React.Component {
       }
     }
 
-    this.sortListItems(listItems);
-
-    this.state = {
-      listItems: listItems,
-      newItem: "",
-    }
+    return listItems;
   }
 
   sortListItems(listItems) {
@@ -40,6 +47,7 @@ class App extends React.Component {
     this.setState(prevState => ({
       listItems: [...prevState.listItems, newItemObject],
       newItem: "",
+      lastUpdated: newItemObject.title,
     }));
   };
 
@@ -47,43 +55,47 @@ class App extends React.Component {
     this.setState({newItem: event.currentTarget.value});
   }
 
-  handlePlus = (event, index) => {
+  handlePlus = (_event, index) => {
     this.setState(prevState => {
-      const newListItems = prevState.listItems.slice();
-      const newItem = {
-        title: newListItems[index].title,
-        score: newListItems[index].score + 1,
-      }
-      newListItems[index] = newItem;
+      const newListItems = prevState.listItems.map((item, idx) => {
+        if (idx === index) {
+          return { ...item, score: item.score + 1 };
+        } else {
+          return item;
+        }
+      });
       this.sortListItems(newListItems);
 
-      window.localStorage.setItem(newItem.title, JSON.stringify(newItem));
+      window.localStorage.setItem(newListItems[index].title, JSON.stringify(newListItems[index]));
 
       return {
         listItems: newListItems,
-      }
-    })
+        lastUpdated: prevState.listItems[index].title,
+      };
+    });
   }
 
-  handleMinus = (event, index) => {
+  handleMinus = (_event, index) => {
     this.setState(prevState => {
-      const newListItems = prevState.listItems.slice();
-      const newItem = {
-        title: newListItems[index].title,
-        score: newListItems[index].score - 1,
-      }
-      newListItems[index] = newItem;
+      const newListItems = prevState.listItems.map((item, idx) => {
+        if (idx === index) {
+          return { ...item, score: item.score - 1 };
+        } else {
+          return item;
+        }
+      });
       this.sortListItems(newListItems);
 
-      window.localStorage.setItem(newItem.title, JSON.stringify(newItem));
+      window.localStorage.setItem(newListItems[index].title, JSON.stringify(newListItems[index]));
 
       return {
         listItems: newListItems,
-      }
-    })
+        lastUpdated: prevState.listItems[index].title,
+      };
+    });
   }
 
-  handleDelete = (event, index) => {
+  handleDelete = (_event, index) => {
     this.setState(prevState => {
       const deletedTitle = prevState.listItems[index].title;
       const newListItems = prevState.listItems.toSpliced(index, 1);
@@ -92,29 +104,31 @@ class App extends React.Component {
 
       return {
         listItems: newListItems,
+        lastUpdated: null,
       }
     })
   }
 
-  handleFlag = (event, index) => {
+  handleFlag = (_event, index) => {
     this.setState(prevState => {
-      const newListItems = prevState.listItems.slice();
-      const newItem = {
-        title: newListItems[index].title,
-        score: newListItems[index].score,
-        flag: !newListItems[index].flag,
-      }
-      newListItems[index] = newItem;
+      const newListItems = prevState.listItems.map((item, idx) => {
+        if (idx === index) {
+          return { ...item, flag: !item.flag };
+        } else {
+          return item;
+        }
+      });
 
-      window.localStorage.setItem(newItem.title, JSON.stringify(newItem));
+      window.localStorage.setItem(newListItems[index].title, JSON.stringify(newListItems[index]));
 
       return {
         listItems: newListItems,
-      }
-    })
+        lastUpdated: newListItems[index].title,
+      };
+    });
   }
 
-  handleExport = (event) => {
+  handleExport = (_event) => {
     const blob = new Blob([JSON.stringify(this.state.listItems)], { type: 'text/json' });
     const downloadLink = document.createElement('a');
     downloadLink.href = window.URL.createObjectURL(blob);
@@ -151,23 +165,19 @@ class App extends React.Component {
     fileInput.value = '';
   }
 
+  getClassNames(element) {
+    const classNames = [];
+    if (element.flag) classNames.push('flag');
+    if (this.state.lastUpdated === element.title) classNames.push('last-updated');
+    return classNames.join(' ');
+  }
+
   render() {
-    const listTemplate =
-      this.state.listItems.map((element, key) => {
-        return <li key={key} className={element.flag ? 'flag' : ''}>
-          <div className='elementTitle'>{element.title}</div>
-          <div className='score'>{element.score}</div>
-          <div className='plusButton'><button onClick={(e) => this.handlePlus(e, key)}>+</button></div>
-          <div className='minusButton'><button onClick={(e) => this.handleMinus(e, key)}>-</button></div>
-          <div className='deleteButton'><button onClick={(e) => this.handleDelete(e, key)}>🗑️</button></div>
-          <div className='flagButton'><button onClick={(e) => this.handleFlag(e, key)}>🚩</button></div>
-        </li>
-      });
 
     return (
       <div className="App">
           <ol>
-            {listTemplate}
+            {this.listTemplate()}
           </ol>
           <form onSubmit={this.addElement}>
             <div className='inputNew'>
@@ -185,6 +195,21 @@ class App extends React.Component {
           </p>
       </div>
     );
+  }
+
+  listTemplate() {
+    return this.state.listItems.map((element, key) => {
+      return (
+        <li key={key} className={this.getClassNames(element)}>
+          <div className='elementTitle'>{element.title}</div>
+          <div className='score'>{element.score}</div>
+          <div className='plusButton'><button onClick={(e) => this.handlePlus(e, key)}>+</button></div>
+          <div className='minusButton'><button onClick={(e) => this.handleMinus(e, key)}>-</button></div>
+          <div className='deleteButton'><button onClick={(e) => this.handleDelete(e, key)}>🗑️</button></div>
+          <div className='flagButton'><button onClick={(e) => this.handleFlag(e, key)}>🚩</button></div>
+        </li>
+      );
+    });
   }
 }
 
